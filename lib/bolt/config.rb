@@ -11,6 +11,7 @@ require 'bolt/transport/orch'
 require 'bolt/transport/local'
 require 'bolt/transport/docker'
 require 'bolt/transport/remote'
+require 'bolt/transport/buildah'
 
 module Bolt
   TRANSPORTS = {
@@ -19,7 +20,8 @@ module Bolt
     pcp: Bolt::Transport::Orch,
     local: Bolt::Transport::Local,
     docker: Bolt::Transport::Docker,
-    remote: Bolt::Transport::Remote
+    remote: Bolt::Transport::Remote,
+    buildah: Bolt::Transport::Buildah
   }.freeze
 
   class UnknownTransportError < Bolt::Error
@@ -57,7 +59,8 @@ module Bolt
       docker: {},
       remote: {
         'run-on' => 'localhost'
-      }
+      },
+      buildah: {}
     }.freeze
 
     def self.default
