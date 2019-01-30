@@ -23,14 +23,6 @@ end
 cli << '--modulepath' << moduledir
 Puppet.initialize_settings(cli)
 
-# Avoid extraneous output
-Puppet[:report] = false
-
-# Make sure to apply the catalog
-Puppet[:noop] = args['_noop'] || false
-
-Puppet[:default_file_terminus] = :file_server
-
 exit_code = 0
 begin
   # This happens implicitly when running the Configurer, but we make it explicit here. It creates the
@@ -47,33 +39,54 @@ begin
   env.each_plugin_directory do |dir|
     $LOAD_PATH << dir unless $LOAD_PATH.include?(dir)
   end
-
-  # Ensure custom facts are available for provider suitability tests
-  facts = Puppet::Node::Facts.indirection.find(SecureRandom.uuid, environment: env)
-
-  report = if Puppet::Util::Package.versioncmp(Puppet.version, '5.0.0') > 0
-             Puppet::Transaction::Report.new
-           else
-             Puppet::Transaction::Report.new('apply')
-           end
+  excluded_types = %i[stage component schedule filebucket]
 
   Puppet.override(current_environment: env,
                   loaders: Puppet::Pops::Loaders.new(env)) do
     catalog = Puppet::Resource::Catalog.from_data_hash(args['catalog'])
-    catalog.environment = env.name.to_s
-    catalog.environment_instance = env
-    if defined?(Puppet::Pops::Evaluator::DeferredResolver)
-      # Only available in Puppet 6
-      Puppet::Pops::Evaluator::DeferredResolver.resolve_and_replace(facts, catalog)
-    end
     catalog = catalog.to_ral
+    catalog.finalize
 
-    configurer = Puppet::Configurer.new
-    configurer.run(catalog: catalog, report: report, pluginsync: false)
+    results = {
+      "resource" => {}
+    }
+    catalog.resources.reject { |res| excluded_types.include?(res.type) }.each do |resource|
+      resource_hash = resource.parameters.inject({}) do |acc, (name, param)|
+        next acc if param.metaparam? || name == :internal_puppet_namevar
+        acc.merge(name => param.value)
+      end
+
+      if resource.type == :output
+        results['output'] ||= {}
+        results['output'][resource.title] = resource_hash
+      elsif resource.type.to_s.start_with?('provider_')
+        resource_hash['alias'] = resource.title
+        results['provider'] ||= []
+        provider_type = resource.type.to_s.split('_', 2)[1]
+        results['provider'] << {
+          provider_type => resource_hash
+        }
+      else
+        results['resource'][resource.type] ||= {}
+        results['resource'][resource.type][resource.title] = resource_hash
+      end
+    end
+
+    FileUtils.mkdir_p('/tmp/tf')
+    File.write('/tmp/tf/catalog.tf', JSON.pretty_generate(results))
   end
 
-  puts JSON.pretty_generate(report.to_data_hash)
-  exit_code = report.exit_status != 1
+  Dir.chdir('/tmp/tf') do
+    `terraform init && terraform apply -auto-approve`
+
+    exit_code = $?.to_i
+
+    outputs = JSON.parse(`terraform output -json`).inject({}) do |acc, (param, hash)|
+      acc.merge(param => hash['value'])
+    end
+
+    puts({outputs: outputs}.to_json)
+  end
 ensure
   begin
     FileUtils.remove_dir(puppet_root)

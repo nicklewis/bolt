@@ -185,18 +185,13 @@ module Bolt
                 '_noop' => options['_noop']
               }
 
-              results = transport.batch_task(batch, catalog_apply_task, arguments, options, &notify)
-              Array(results).map { |result| ApplyResult.from_task_result(result) }
+              transport.batch_task(batch, catalog_apply_task, arguments, options, &notify)
             end
           end
         end
 
         @executor.await_results(result_promises)
       end
-
-      # Allow for report to exclude event metrics (apply_result doesn't require it to be present)
-      resource_counts = r.ok_set.map { |result| result.event_metrics&.fetch('total') }.compact
-      @executor.report_apply(count_statements(raw_ast), resource_counts)
 
       if !r.ok && !options['_catch_errors']
         raise Bolt::ApplyFailure, r
