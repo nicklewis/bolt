@@ -1,19 +1,25 @@
----
----
+@import "modified-cayman";
 
-@import "{{ site.theme }}";
+h1 {
+  text-align: center
+}
 
 .page-header {
   display: none;
 }
 
 .bolt-logo {
-  height: 4rem;
+  height: 1.4rem;
 }
 
 .sidebar {
   order: 1;
-  padding-top: 2rem;
+  padding: 2rem;
+  background: $sidebar-background;
+
+  ul {
+    padding: 0px;
+  }
 }
 
 .main-content {
@@ -35,4 +41,5 @@
 
 .nav-header {
   font-weight: bold;
+  color: $body-text
 }
