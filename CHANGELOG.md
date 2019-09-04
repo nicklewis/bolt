@@ -2,9 +2,9 @@
 
 #### New Features
 
-* **Remote state files for Terraform inventory plugin**
+* **Remote state files for Terraform inventory plugin**  
   The Terraform plugin for inventory configuration now supports both local and remote state files. ([BOLT-1469](https://tickets.puppet.com/browse/BOLT-1469))
-* **Reorganized command reference documentation**
+* **Reorganized command reference documentation**  
   The command reference documentation now shows a list of options available for each command, instead of having separate sections for commands and options. ([BOLT-1422](https://tickets.puppet.com/browse/BOLT-1422))
 
 #### Bug Fixes
@@ -13,17 +13,17 @@
 
 #### New Features
 
-* **YAML plans automatically call apply_prep before executing a resources step**
+* **YAML plans automatically call apply_prep before executing a resources step**  
   Bolt automatically calls apply_prep on all target nodes before running any resources step in a YAML plan. ([BOLT-1451](https://tickets.puppet.com/browse/BOLT-1451))
-* **Bolt images are published to Docker Hub**
+* **Bolt images are published to Docker Hub**  
   We now publish Bolt container images to the Puppet Docker Hub when new versions are released. ([BOLT-1407](https://tickets.puppet.com/browse/BOLT-1407))
-* **AWS plugin has a new location for configuring information**
+* **AWS plugin has a new location for configuring information**  
   You now configure the AWS plugin in the configuration file's plugin section instead of its aws section. ([BOLT-1501](https://tickets.puppet.com/browse/BOLT-1501))
-* **Use Vault KV secrets engine to populate inventory fields**
+* **Use Vault KV secrets engine to populate inventory fields**  
   You can now populate inventory configuration fields (such as passwords) by looking up secrets from a Vault KV engine. ([BOLT-1424](https://tickets.puppet.com/browse/BOLT-1424))
-* **Users are alerted to analytics policies**
+* **Users are alerted to analytics policies**  
   When Bolt first runs, it warns users about collecting and sending analytics and gives instructions for turning analytics collection off. ([BOLT-1487](https://tickets.puppet.com/browse/BOLT-1487))
-* **Improved documentation for converting plans from YAML to the Puppet language**
+* **Improved documentation for converting plans from YAML to the Puppet language**  
   Bolt documentation explains what structures within a YAML plan can't fully convert into a Puppet language plan. ([BOLT-1286](https://tickets.puppet.com/browse/BOLT-1286))
 
 #### Bug Fixes
@@ -32,13 +32,13 @@
 
 #### New Features
 
-* **Use WinRM with Kerberos**
+* **Use WinRM with Kerberos**  
   You can now use Kerberos to authenticate WinRM connections from a Linux host node. This feature is experimental. ([BOLT-126](https://tickets.puppet.com/browse/BOLT-126))
-* **New analytics about Boltdir usage**
+* **New analytics about Boltdir usage**  
   Bolt now reports analytics about whether it is using Boltdir in the default location, Boltdir in a user-specified location, or a bare bolt.yaml without a Boltdir. ([BOLT-1315](https://tickets.puppet.com/browse/BOLT-1315))
-* **AWS inventory discovery integration**
+* **AWS inventory discovery integration**  
   You can now dynamically load AWS EC2 instances as Bolt targets in the inventory. ([BOLT-1328](https://tickets.puppet.com/browse/BOLT-1328))
-* **New analytics for inventory plugins**
+* **New analytics for inventory plugins**  
   Bolt now sends an analytics event when the built-in inventory plugins are used. ([BOLT-1410](https://tickets.puppet.com/browse/BOLT-1410))
 
 #### Bug Fixes
@@ -47,103 +47,103 @@
 
 #### New Features
 
-* **Options for PCP transport now configurable in bolt.yaml**
+* **Options for PCP transport now configurable in bolt.yaml**  
   The job-poll-timeout and job-poll-interview options for the PCP transport are now configurable in bolt.yaml. ([BOLT-1425](https://tickets.puppet.com/browse/BOLT-1425))
-* **Task plugin improvements**
+* **Task plugin improvements**  
   The task plugin now enables you to run a task to discover targets or look up configuration information in the version 2 inventory file. ([BOLT-1408](https://tickets.puppet.com/browse/BOLT-1408))
-* **Ability to see nodes in an inventory group**
+* **Ability to see nodes in an inventory group**  
   You can now see what nodes a Bolt command acts on using the bolt inventory show subcommand. Pass a targeting option, such as -n node1,node2, -n groupname, -q query, --rerun, and other targeting options to specify which nodes to list. ([BOLT-1398](https://tickets.puppet.com/browse/BOLT-1398))
-* **Support for an apply step**
+* **Support for an apply step**  
   YAML plans now support applying Puppet resources with a resources step. ([BOLT-1222](https://tickets.puppet.com/browse/BOLT-1222))
 
 ## 1.24.0
 
 #### New Features
 
-* **Help text only lists options for a given command**
+* **Help text only lists options for a given command**  
   Help text now only shows options for the specified subcommand and action. Previously, all options were displayed in the help text, even if those options did not apply to the specified subcommand and action. ([BOLT-1342](https://tickets.puppet.com/browse/BOLT-1342))
-* **Packages for Fedora 30**
+* **Packages for Fedora 30**  
   Bolt packages are now available for Fedora 30. ([BOLT-1302](https://tickets.puppet.com/browse/BOLT-1302))
-* **Adds support for embedding eyaml data in the inventory**
+* **Adds support for embedding eyaml data in the inventory**  
   This change adds a hiera-eyaml compatible pkcs7 plugin and support for embedding eyaml data in the inventory. ([BOLT-1270](https://tickets.puppet.com/browse/BOLT-1270))
-* **Allow $nodes as positional arg for run_plan()**
+* **Allow $nodes as positional arg for run_plan()**  
   This change allows the run_plan() function to be invoked with $nodes as the second positional argument, so that it can be used the same way run_task() is used. ([BOLT-1197](https://tickets.puppet.com/browse/BOLT-1197))
 
 ## 1.23.0
 
 #### New Features
 
-* **`catch_errors` function**
+* **`catch_errors` function**  
   The new plan function, `catch_errors`, accepts a list of types of errors to catch and a block of code to run where, if it errors, the plan continues executing. ([BOLT-1316](https://tickets.puppet.com/browse/BOLT-1316))
-* **Forge baseurl setting in puppetfile config**
+* **Forge baseurl setting in puppetfile config**  
   The puppetfile config section now supports a Forge subsection that you can use to set an alternate Forge location from which to download modules. ([BOLT-1376](https://tickets.puppet.com/browse/BOLT-1376))
 
 ## 1.22.0
 
 #### New Features
 
-* **Proxy configuration**
+* **Proxy configuration**  
   You can now specify an HTTP proxy for bolt puppetfile install in bolt.yaml, for example:
   ```
   puppetfile: 
     proxy: https://proxy.example.com
   ```
-* **Support for version 4 Terraform state files**
+* **Support for version 4 Terraform state files**  
   Target-lookups using the Terraform plugin are now compatible with the version 4 Terraform state files generated by Terraform version 0.12.x. ([BOLT-1341](https://tickets.puppet.com/browse/BOLT-1341))
-* **Prompt for sensitive data from inventory v2**
+* **Prompt for sensitive data from inventory v2**  
   A new prompt plugin in inventory v2 allows setting configuration values via a prompt. ([BOLT-1269](https://tickets.puppet.com/browse/BOLT-1269))
 
 ## 1.21.0
 
 #### New Features
 
-* **Set custom exec commands for Docker transport**
+* **Set custom exec commands for Docker transport**  
   New configuration options, shell-command and tty, for the Docker transport allow setting custom Docker exec commands.
-* **Check existence and readability of files**
+* **Check existence and readability of files**  
   New functions, file::exists and file::readable, test whether a given file exists and is readable, respectively. ([BOLT-1338](https://tickets.puppet.com/browse/BOLT-1338))
-* **Output a message**
+* **Output a message**  
   The new out::message() function can be used to print a message to the user during a plan. ([BOLT-1325](https://tickets.puppet.com/browse/BOLT-1325))
-* **Return a filtered ResultSet with a ResultSet**
+* **Return a filtered ResultSet with a ResultSet**  
   A new filter_set function in the ResultSet data type filters a ResultSet with a lambda to return a ResultSet object. ([BOLT-1337](https://tickets.puppet.com/browse/BOLT-1337))
-* **Improved error handling for unreadable private keys**
+* **Improved error handling for unreadable private keys**  
   A more specific warning is now surfaced when an SSH private key can't be read from Bolt configuration. ([BOLT-1297](https://tickets.puppet.com/browse/BOLT-1297))
-* **Look up PuppetDB facts in inventory v2**
+* **Look up PuppetDB facts in inventory v2**  
   The PuppetDB plugin can now be used to look up configuration values from PuppetDB facts for the name, uri, and config inventory options for each target. ([BOLT-1264](https://tickets.puppet.com/browse/BOLT-1264))
 
 ## 1.20.0
 
 #### New Features
 
-* **Terraform plugin in inventory v2**
+* **Terraform plugin in inventory v2**  
   A new plugin in inventory v2 loads Terraform state and map resource properties to target parameters. This plugin enables using a Terraform projectto dynamically determine the targets to use when running Bolt. ([BOLT-1265](https://tickets.puppet.com/browse/BOLT-1265))
-* **Type info available in plans**
+* **Type info available in plans**  
   A new to_data method is available for plan result objects that provides a hash representation of the object. ([BOLT-1223](https://tickets.puppet.com/browse/BOLT-1223))
-* **Improved logging for apply**
+* **Improved logging for apply**  
   The Bolt apply command and the apply function from plans now show log messages for changes and failures that happened while applying Puppet code. ([BOLT-901](https://tickets.puppet.com/browse/BOLT-901))
 
 ## 1.19.0
 
 #### New Features
 
-* **Convert YAML plans to Puppet plans**
+* **Convert YAML plans to Puppet plans**  
   You can now convert YAML plans to Puppet plans with the bolt plan convert command. ([BOLT-1195](https://tickets.puppet.com/browse/BOLT-1195))
-* **Improved error handling for missing commands**
+* **Improved error handling for missing commands**  
   A clear error message is now shown when no object is specified on the command line, for example bolt command run --nodes <NODE_NAME>. ([BOLT-1243](https://tickets.puppet.com/browse/BOLT-1243))
 
 ## 1.18.0
 
 #### New Features
 
-* **Inventory file version 2**
+* **Inventory file version 2**  
   An updated version of the inventory file, version 2, is now available for experimentation and testing. In addition to several syntax changes, this version enables setting a human readable name for nodes and dynamically populating groups from PuppetDB queries. This version of the inventory file is still in development and might experience breaking changes in future releases. ([BOLT-1232](https://tickets.puppet.com/browse/BOLT-1232))
-* **YAML plan validation**
+* **YAML plan validation**  
   YAML plan validation now alerts on syntax errors before plan execution. ([BOLT-1194](https://tickets.puppet.com/browse/BOLT-1194))
 
 ## 1.17.0
 
 #### New Features
 
-* **Rerun failed commands**
+* **Rerun failed commands**  
   Bolt now stores information about the last failed run in a .rerun.json file in the Bolt project directory. You can use this record to target nodes for the next run using --retry failure instead of --nodes.
 
   For repositories that contain a Bolt project directory, add $boltdir/.last_failure.json to .gitignore files.
@@ -154,100 +154,100 @@
 
 #### New Features
 
-* **Packaged hiera-eyaml gem**
+* **Packaged hiera-eyaml gem**  
   Bolt packages now include the hiera-eyaml gem. ([BOLT-1026](https://tickets.puppet.com/browse/BOLT-1026))
-* **Local transport options for run-as, run-as-command, and sudo-password**
+* **Local transport options for run-as, run-as-command, and sudo-password**  
   The local transport now accepts the run-as, run-as-command, and sudo-password options on non-Windows nodes. These options escalate the system user (who ran bolt) to the specified user, and behave like the same options using the SSH transport. _run_as can also be configured for individual plan function calls for the local transport. ([BOLT-1052](https://tickets.puppet.com/browse/BOLT-1052))
-* **Localhost target applies the puppet-agent feature**
+* **Localhost target applies the puppet-agent feature**  
   When the target hostname is localhost, the puppet-agent feature is automatically added to the target, because the Puppet agent installed with Bolt is present on the local system. This functionality is available on all transports, not just the local transport. ([BOLT-1200](https://tickets.puppet.com/browse/BOLT-1200))
-* **Tasks use the Bolt Ruby interpreter only for localhost**
+* **Tasks use the Bolt Ruby interpreter only for localhost**  
   Bolt sets its own installed Ruby as the default interpreter for all .rb scripts running on localhost. Previously, this default was used on all commands run over the local transport; it's now used when the hostname is localhost regardless of the transport. ([BOLT-1205](https://tickets.puppet.com/browse/BOLT-1205))
-* **Fact indicates whether Bolt is compiling a catalog**
+* **Fact indicates whether Bolt is compiling a catalog**  
   If Bolt is compiling a catalog, $facts['bolt'] is set to true, allowing you to determine whether modules are being used from a Bolt catalog. ([BOLT-1199](https://tickets.puppet.com/browse/BOLT-1199))
 
 ## 1.15.0
 
 #### New Features
 
-* **YAML plans**
+* **YAML plans**  
   You can now write plans in the YAML language. YAML plans run a list of steps in order, which allows you to define simple workflows. Steps can contain embedded Puppet code expressions to add logic where necessary. For more details about YAML plans, see Writing plans in YAML. For an example of a YAML plan in use, see the Puppet blog. ([BOLT-1150](https://tickets.puppet.com/browse/BOLT-1150))
   This version also adds analytics data collection about the number of steps and the return type of YAML plans. ([BOLT-1193](https://tickets.puppet.com/browse/BOLT-1193))
-* **Support for Red Hat Enterprise Linux 8**
+* **Support for Red Hat Enterprise Linux 8**  
   A Bolt package is now available for RHEL 8. ([BOLT-1204](https://tickets.puppet.com/browse/BOLT-1204))
-* **Improved load time**
+* **Improved load time**  
   Bolt startup is now more efficient. ([BOLT-1119](https://tickets.puppet.com/browse/BOLT-1119))
-* **Details about Result and ResultSet objects**
+* **Details about Result and ResultSet objects**  
   The Result and ResultSet objects now include information in the JSON output about the action that generated the result. ([BOLT-1125](https://tickets.puppet.com/browse/BOLT-1125))
-* **Inventory warning about unexepected keys**
+* **Inventory warning about unexepected keys**  
   An informative warning message is now logged when invalid group or node configuration keys are detected in the inventoryfile. ([BOLT-1017](https://tickets.puppet.com/browse/BOLT-1017))
-* **BoltSpec::Run support for uploading files to remote systems**
+* **BoltSpec::Run support for uploading files to remote systems**  
   BoltSpec::Run now supports the upload_file action. ([BOLT-953](https://tickets.puppet.com/browse/BOLT-953))
 
 ## 1.14.0
 
 #### New Features
 
-* **Support for Puppet device modules in a manifest block**
+* **Support for Puppet device modules in a manifest block**  
   You can now apply Puppet code on targets that can't run a Puppet agent using the remote transport via a proxy. This is an experimental feature and might change in future minor (y) releases. ([BOLT-645](https://tickets.puppet.com/browse/BOLT-645))
-* **Validation and error handling for invalid PCP tokens**
+* **Validation and error handling for invalid PCP tokens**  
   The PCP transport token-file configuration option now includes validation and a more helpful error message. ([BOLT-1076](https://tickets.puppet.com/browse/BOLT-1076))
 
 ## 1.13.0
 
 #### New Features
 
-* **SMB file transfer on Windows**
+* **SMB file transfer on Windows**  
   When transferring files to a Windows host, you can now optionally use the SMB protocol to reduce transfer time. You must have either administrative rights to use an administrative share, like \\host\C$, or use UNC style paths to access existing shares, like \\host\share. You can use SMB file transfers only over HTTP, not HTTPS, and SMB3, which supports encryption, is not yet supported. ([BOLT-153](https://tickets.puppet.com/browse/BOLT-153))
-* **Interpreter configuration option**
+* **Interpreter configuration option**  
   An interpreters configuration option enables setting the interpreter that is used to execute a task based on file extension. This options lets you override the shebang defined in the task source code with the path to the executable on the remote system. ([BOLT-146](https://tickets.puppet.com/browse/BOLT-146))
-* **Improved error handling**
+* **Improved error handling**  
   Clearer error messages now alert you when you use plan functions not meant to be called in manifest blocks. ([BOLT-1131](https://tickets.puppet.com/browse/BOLT-1131))
 
 ## 1.12.0
 
 #### New Features
 
-* **Updated project directory structure**
+* **Updated project directory structure**  
   Within your project directory, we now recommend using a directory called site-modules, instead of the more ambiguously named site, to contain any modules not intended to be managed with a Puppetfile. Both site-modules and site are included on the default modulepath to maintain backward compatibility. ([BOLT-1108](https://tickets.puppet.com/browse/BOLT-1108))
-* **bolt puppetfile show-modules command**
+* **bolt puppetfile show-modules command**  
   A new bolt puppetfile show-modules command lists the modules, and their versions, installed in the current Boltdir. ([BOLT-1118](https://tickets.puppet.com/browse/BOLT-1118))
-* **BoltSpec::Run helpers accept options consistently**
+* **BoltSpec::Run helpers accept options consistently**  
   All BoltSpec::Run helpers now require the params or arguments argument to be passed. ([BOLT-1057](https://tickets.puppet.com/browse/BOLT-1057))
 
 ## 1.11.0
 
 #### New Features
 
-* **bolt task show displays module path**
+* **bolt task show displays module path**  
   Task and plan list output now includes the module path to help you better understand why a task or plan is not included. ([BOLT-1027](https://tickets.puppet.com/browse/BOLT-1027))
-* **PowerShell scripts over the PCP transport**
+* **PowerShell scripts over the PCP transport**  
   You can now run PowerShell scripts on Windows targets over the PCP transport. ([BOLT-830](https://tickets.puppet.com/browse/BOLT-830))
-* **RSA keys with OpenSSH format**
+* **RSA keys with OpenSSH format**  
   RSA keys stored in the OpenSSH format can now be used for authentication with the SSH transport. ([BOLT-1124](https://tickets.puppet.com/browse/BOLT-1124))
-* **Support for new platforms**
+* **Support for new platforms**  
   Bolt packages are now available for Fedora 28 and 29 ([BOLT-978](https://tickets.puppet.com/browse/BOLT-978)), and macOS 10.14 Mojave ([BOLT-1040](https://tickets.puppet.com/browse/BOLT-1040))
 
 ## 1.10.0
 
 #### New Features
 
-* **Hyphens allowed in aliases and group names**
+* **Hyphens allowed in aliases and group names**  
   Node aliases and group names in the Bolt inventory can now contain hyphens. ([BOLT-1022](https://tickets.puppet.com/browse/BOLT-1022))
 
 ## 1.9.0
 
 #### New Features
 
-* **Improved out-of-the-box tasks**
+* **Improved out-of-the-box tasks**  
   The package and service tasks now select task implementation based on available target features while their platform-specific implementations are private. ([BOLT-1049](https://tickets.puppet.com/browse/BOLT-1049))
-* **Respect multiple PuppetDB server_urls**
+* **Respect multiple PuppetDB server_urls**  
   Bolt now tries to connect to all configured PuppetDBserver_urls before failing. ([BOLT-938](https://tickets.puppet.com/browse/BOLT-938))
 
 ## 1.8.0
 
 #### New Features
 
-* **Standard library functions**
+* **Standard library functions**  
   Bolt now includes several standard library functions useful for writing plans, including:
   * ctrl::sleep
   * ctrl::do_until
@@ -261,89 +261,89 @@
 
 #### New Features
 
-* **Configure proxy SSH connections through jump hosts**
+* **Configure proxy SSH connections through jump hosts**  
   You can now configure proxy SSH connections through jump hosts from the inventory file with the proxyjump SSH configuration option. ([BOLT-1039](https://tickets.puppet.com/browse/BOLT-1039))
-* **Query resource states from a plan**
+* **Query resource states from a plan**  
   You can now query resource states from a plan with the get_resources function. ([BOLT-1035](https://tickets.puppet.com/browse/BOLT-1035))
-* **Specify an array of directories in modulepath**
+* **Specify an array of directories in modulepath**  
   You can now specify an array of directories for the modulepath setting in bolt.yaml, rather than just a string. This change enables using a single bolt.yaml on both *nix and Windows clients. ([BOLT-817](https://tickets.puppet.com/browse/BOLT-817))
-* **Save keystrokes on modulepath, inventoryfile, and verbose**
+* **Save keystrokes on modulepath, inventoryfile, and verbose**  
   You can now use shortened command options for modulepath (-m), inventoryfile (-i), and verbose (-v). ([BOLT-1047](https://tickets.puppet.com/browse/BOLT-1047))
 
 ## 1.6.0
 
 #### New Features
 
-* **Remote tasks**
+* **Remote tasks**  
   You can now run tasks on a proxy target that remotely interacts with the real target, as defined by the run-on option. Remote tasks are useful for targets like network devices that have limited shell environments, or cloud services driven only by HTTP APIs. Connection information for non-server targets, like HTTP endpoints, can be stored in inventory. ([BOLT-791](https://tickets.puppet.com/browse/BOLT-791))
-* **reboot module plan**
+* **reboot module plan**  
   Bolt now ships with the reboot module, and that module now provides a plan that reboots targets and waits for them to become available. ([BOLT-459](https://tickets.puppet.com/browse/BOLT-459))
-* **Local transport on Windows**
+* **Local transport on Windows**  
   The local transport option is now supported on Windows. ([BOLT-608](https://tickets.puppet.com/browse/BOLT-608))
-* **bolt_shim module contents marked as sensitive**
+* **bolt_shim module contents marked as sensitive**  
   The bolt_shim module that enables using Bolt with PE now marks file content as sensitive, preventing it from being logged or stored in a database. ([BOLT-815](https://tickets.puppet.com/browse/BOLT-815))
 
 ## 1.5.0
 
 #### New Features
 
-* **Node aliases**
+* **Node aliases**  
   You can now specify aliases for nodes in your inventory and then use the aliases to refer to specific nodes. ([BOLT-510](https://tickets.puppet.com/browse/BOLT-510))
-* **Run apply with PE orchestrator without installing puppet_agent module**
+* **Run apply with PE orchestrator without installing puppet_agent module**  
   Bolt no longer requires installing the puppet_agent module in PE in order to run apply actions with the PE orchestrator. ([BOLT-940](https://tickets.puppet.com/browse/BOLT-940))
 
 ## 1.4.0
 
 #### New Features
 
-* **Bolt apply with orchestrator**
+* **Bolt apply with orchestrator**  
   A new puppetlabs-apply_helper module enables using Boltapply with orchestrator. For details, see the module README. ([BOLT-941](https://tickets.puppet.com/browse/BOLT-941))
-* **Add targets to a group**
+* **Add targets to a group**  
   A new add_to_group function allows you to add targets to an inventory group during plan execution. ([BOLT-942](https://tickets.puppet.com/browse/BOLT-942))
-* **Additional plan test helpers**
+* **Additional plan test helpers**  
   The BoltSpec::Plans library now supports unit testing plans that use the _run_as parameter, apply, run_command, run_script, and upload_file. ([BOLT-984](https://tickets.puppet.com/browse/BOLT-984))
-* **Data collection about applied catalogs**
+* **Data collection about applied catalogs**  
   If analytics data collection is enabled, we now collect randomized info about the number of statements in a manifest block, and how many resources that produces for each target. ([BOLT-644](https://tickets.puppet.com/browse/BOLT-644))
 
 ## 1.3.0
 
 #### New Features
 
-* **Docker transport for running commands on containers**
+* **Docker transport for running commands on containers**  
   A new Docker transport option enables running commands on container instances with the Docker API. The Docker transport is experimental because the capabilities and role of the Docker API might change.([BOLT-962](https://tickets.puppet.com/browse/BOLT-962))
-* **Wait until all target nodes accept connections**
+* **Wait until all target nodes accept connections**  
   A new wait_until_available function waits until all targets are accepting connections, or triggers an error if the command times out. ([BOLT-956](https://tickets.puppet.com/browse/BOLT-956))
 
 ## 1.2.0
 
 #### New Features
 
-* **Apply Puppet manifest code with bolt apply command**
+* **Apply Puppet manifest code with bolt apply command**  
   The command bolt apply has been added to apply Puppet manifest code on targets without wrapping them in an apply() block in a plan. Note: This command is in development and subject to change. ([BOLT-858](https://tickets.puppet.com/browse/BOLT-858))
-* **Python and Ruby helper libraries for tasks**
+* **Python and Ruby helper libraries for tasks**  
   Two new libraries have been added to help you write tasks in Ruby and Python:
 
     * https://github.com/puppetlabs/puppetlabs-ruby_task_helper
     * https://github.com/puppetlabs/puppetlabs-python_task_helper
   Use these libraries to parse task input, catch errors, and produce task output. For details, see Task Helpers. ([BOLT-906](https://tickets.puppet.com/browse/BOLT-906) and [BOLT-907](https://tickets.puppet.com/browse/BOLT-907))
 
-* **Redacted passwords for printed target objects**
+* **Redacted passwords for printed target objects**  
   When the Target object in a Bolt plan is printed, it includes only the host, user, port, and protocol used. The values for password and sudo-password are redacted. ([BOLT-944](https://tickets.puppet.com/browse/BOLT-944))
 
 ## 1.1.0
 
 #### New Features
-* **Share code between tasks**
+* **Share code between tasks**  
   Bolt includes the ability to share code between tasks. A task can include a list of files that it requires, from any module, that it copies over and makes available via a _installdir parameter. This feature is also supported in Puppet Enterprise 2019.0. For more information see, Sharing task code. ([BOLT-755](https://tickets.puppet.com/browse/BOLT-755))
-* **Upgraded WinRM gem dependencies**
+* **Upgraded WinRM gem dependencies**  
   The following gem dependencies have been upgraded to fix the connection between OMI server on Linux and the WinRM transport:
     * winrm 2.3.0
     * winrm-fs 1.3.1
     * json-schema 2.8.1
   ([BOLT-929](https://tickets.puppet.com/browse/BOLT-929))
-* **Mark internal tasks as private**
+* **Mark internal tasks as private**  
   In the task metadata, you can mark internal tasks as private and prevent them from appearing in task list UIs. ([BOLT-734](https://tickets.puppet.com/browse/BOLT-734))
-* **Upload directories via plans**
+* **Upload directories via plans**  
   The bolt file upload command and upload_file action now upload directories. For use over the PCP transport these commands require puppetlabs-bolt_shim 0.2.0 or later. ([BOLT-191](https://tickets.puppet.com/browse/BOLT-191))
-* **Support for public-key signature system ed25519**
+* **Support for public-key signature system ed25519**  
   The ed25519 key type is now supported out-of-the-box in Bolt packages. ([BOLT-380](https://tickets.puppet.com/browse/BOLT-380))
