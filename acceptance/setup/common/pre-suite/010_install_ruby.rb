@@ -46,7 +46,9 @@ PS
       install_package(bolt, 'rubygem-io-console')
       result = on(bolt, 'ruby --version')
     when /osx/
-      # System ruby for osx is 2.3. winrm-fs and its dependencies require > 2.3.
+      # System ruby for osx is 2.3. winrm-fs > 1.3.3 and gettext >= 3.3.0
+      # require Ruby > 2.3, so explicitly install compatible versions first.
+      on(bolt, 'gem install gettext -v 3.2.9 --no-rdoc --no-ri')
       on(bolt, 'gem install winrm-fs -v 1.3.3 --no-rdoc --no-ri')
       result = on(bolt, 'ruby --version')
     else
