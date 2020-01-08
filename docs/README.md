@@ -12,7 +12,7 @@ bundle install --path vendor/bundle
 
 To start a local development server
 ```
-bundle exec jekyll server --baseurl /bolt
+bundle exec jekyll server --baseurl /bolt --drafts
 ```
 
 Go to `http://localhost:4000/bolt/` to see the site running. Changes will be picked up automatically without restarting the server.
