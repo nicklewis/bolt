@@ -1,5 +1,4 @@
 name: Windows
-
 on:
   push:
     branches: [master]
