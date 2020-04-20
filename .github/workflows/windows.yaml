@@ -51,11 +51,6 @@ jobs:
       - name: Install modules
         if: steps.modules.outputs.cache-hit != 'true'
         run: bundle exec r10k puppetfile install
-      - name: Pre-test setup
-        shell: powershell
-        run: |
-          . scripts\ci.ps1
-          Set-ActiveRubyFromPuppet
       - name: Run tests
         shell: powershell
         run: bundle exec rake integration:windows_agents
@@ -94,9 +89,6 @@ jobs:
       - name: Install modules
         if: steps.modules.outputs.cache-hit != 'true'
         run: bundle exec r10k puppetfile install
-      - name: Pre-test setup
-        shell: powershell
-        run: '& scripts\ci.ps1'
       - name: Run tests
         shell: powershell
         run: bundle exec rake windows_ci
