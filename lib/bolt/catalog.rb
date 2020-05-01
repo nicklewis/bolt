@@ -58,51 +58,44 @@ module Bolt
       target = request['target']
       pdb_client = Bolt::PuppetDB::Client.new(Bolt::PuppetDB::Config.new(request['pdb_config']))
       options = request['puppet_config'] || {}
+      # Facts will be set by the catalog compiler, so we need to ensure
+      # that any plan or target variables with the same name are not
+      # passed into the apply block to avoid a redefinition error.
+      # Filter out plan and target vars separately and raise a Puppet
+      # warning if there are any collisions for either. Puppet warning
+      # is the only way to log a message that will make it back to Bolt
+      # to be printed.
+      plan_vars = request['plan_vars']
+      pv_collisions, pv_filtered = plan_vars.partition do |k, _|
+        target['facts'].keys.include?(k)
+      end.map(&:to_h)
+      unless pv_collisions.empty?
+        print_pv = pv_collisions.keys.map { |k| "$#{k}" }.join(', ')
+        plural = pv_collisions.keys.length == 1 ? '' : 's'
+        Puppet.warning("Plan variable#{plural} #{print_pv} will be overridden by fact#{plural} " \
+                       "of the same name in the apply block")
+      end
+      tv_collisions, tv_filtered = target['variables'].partition do |k, _|
+        target['facts'].keys.include?(k)
+      end.map(&:to_h)
+      unless tv_collisions.empty?
+        print_tv = tv_collisions.keys.map { |k| "$#{k}" }.join(', ')
+        plural = tv_collisions.keys.length == 1 ? '' : 's'
+        Puppet.warning("Target variable#{plural} #{print_tv} " \
+                       "will be overridden by fact#{plural} of the same name in the apply block")
+      end
       with_puppet_settings(request['hiera_config']) do
         Puppet[:rich_data] = true
         Puppet[:node_name_value] = target['name']
         env_conf = { modulepath: request['modulepath'] || [],
-                     facts: target['facts'] || {} }
-        env_conf[:variables] = {}
+                     facts: target['facts'] || {},
+                     variables: tv_filtered.merge(pv_filtered) || {} }
         Puppet::Pal.in_tmp_environment('bolt_catalog', env_conf) do |pal|
           inv = Bolt::ApplyInventory.new(request['config'])
           Puppet.override(bolt_pdb_client: pdb_client,
                           bolt_inventory: inv) do
             Puppet.lookup(:pal_current_node).trusted_data = target['trusted']
-            pal.with_catalog_compiler do |compiler|
-              # Deserializing needs to happen inside the catalog compiler so
-              # loaders are initialized for loading
-              plan_vars = Puppet::Pops::Serialization::FromDataConverter.convert(request['plan_vars'])
-
-              # Facts will be set by the catalog compiler, so we need to ensure
-              # that any plan or target variables with the same name are not
-              # passed into the apply block to avoid a redefinition error.
-              # Filter out plan and target vars separately and raise a Puppet
-              # warning if there are any collisions for either. Puppet warning
-              # is the only way to log a message that will make it back to Bolt
-              # to be printed.
-              pv_collisions, pv_filtered = plan_vars.partition do |k, _|
-                target['facts'].keys.include?(k)
-              end.map(&:to_h)
-              unless pv_collisions.empty?
-                print_pv = pv_collisions.keys.map { |k| "$#{k}" }.join(', ')
-                plural = pv_collisions.keys.length == 1 ? '' : 's'
-                Puppet.warning("Plan variable#{plural} #{print_pv} will be overridden by fact#{plural} " \
-                               "of the same name in the apply block")
-              end
-
-              tv_collisions, tv_filtered = target['variables'].partition do |k, _|
-                target['facts'].keys.include?(k)
-              end.map(&:to_h)
-              unless tv_collisions.empty?
-                print_tv = tv_collisions.keys.map { |k| "$#{k}" }.join(', ')
-                plural = tv_collisions.keys.length == 1 ? '' : 's'
-                Puppet.warning("Target variable#{plural} #{print_tv} " \
-                               "will be overridden by fact#{plural} of the same name in the apply block")
-              end
-
-              pal.send(:add_variables, compiler.send(:topscope), tv_filtered.merge(pv_filtered))
-
+            pal.with_catalog_compiler() do |compiler|
               # Configure language strictness in the CatalogCompiler. We want Bolt to be able
               # to compile most Puppet 4+ manifests, so we default to allowing deprecated functions.
               Puppet[:strict] = options['strict'] || :warning
@@ -127,7 +120,7 @@ module Bolt
                 ast = Puppet::Pops::Model::Factory.PROGRAM(ast, definitions, ast.locator).model
               end
               compiler.evaluate(ast)
-              compiler.instance_variable_get(:@internal_compiler).send(:evaluate_ast_node)
+              compiler.evaluate_ast_node
               compiler.compile_additions
               compiler.with_json_encoding(&:encode)
             end
