@@ -20,7 +20,7 @@ module Bolt
 
       @inventory = inventory
       @executor = executor
-      @modulepath = modulepath
+      @modulepath = modulepath || []
       @plugin_dirs = plugin_dirs
       @pdb_client = pdb_client
       @hiera_config = hiera_config ? validate_hiera_config(hiera_config) : nil
