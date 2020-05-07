@@ -14,7 +14,7 @@ gem "puma", '>= 3.12.0'
 gem "rack", '>= 2.0.5'
 gem "rails-auth", '>= 2.1.4'
 gem "sinatra", '>= 2.0.4'
-
+gem 'puppet', git: 'https://github.com/McdonaldSeanp/puppet.git', branch: 'PUP10476'
 group(:test) do
   gem "beaker-hostgenerator"
   gem "mocha", '~> 1.4.0'
