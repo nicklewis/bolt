@@ -9,7 +9,6 @@ module Bolt
     class Group2
       attr_accessor :name, :groups
 
-      # THESE are duplicates with the old groups for now.
       # Regex used to validate group names and target aliases.
       NAME_REGEX = /\A[a-z0-9_][a-z0-9_-]*\Z/.freeze
 
@@ -41,8 +40,7 @@ module Bolt
 
         @unresolved_targets = {}
         @resolved_targets = {}
-        @targets = Set.new
-        # @target_objects = {}
+
         @aliases = {}
         @string_targets = []
 
@@ -57,7 +55,7 @@ module Bolt
           elsif target.is_a?(Hash)
             add_target_definition(target)
           else
-            raise ValidationError.new("Node entry must be a String or Hash, not #{target.class}", @name)
+            raise ValidationError.new("Target entry must be a String or Hash, not #{target.class}", @name)
           end
         end
 
@@ -150,6 +148,7 @@ module Bolt
           resolved_data = resolve_data_keys(target, target_name).merge(
             'name' => target['name'],
             'uri' => target['uri'],
+            'alias' => target['alias'],
             # groups come from group_data
             'groups' => []
           )
@@ -159,12 +158,16 @@ module Bolt
         end
       end
 
+      def all_target_names
+        @unresolved_targets.keys + @resolved_targets.keys
+      end
+
       def add_target_definition(target)
         # This check ensures target lookup plugins do not returns bare strings.
-        # Remove it if we decide to allows task plugins to return string node
+        # Remove it if we decide to allows task plugins to return string Target
         # names.
         unless target.is_a?(Hash)
-          raise ValidationError.new("Node entry must be a Hash, not #{target.class}", @name)
+          raise ValidationError.new("Target entry must be a Hash, not #{target.class}", @name)
         end
 
         target['name'] = resolve_references(target['name']) if target.key?('name')
@@ -201,14 +204,7 @@ module Bolt
             raise ValidationError.new(msg, @name)
           end
 
-          aliases.each do |alia|
-            raise ValidationError.new("Invalid alias #{alia}", @name) unless alia =~ NAME_REGEX
-
-            if (found = @aliases[alia])
-              raise ValidationError.new(alias_conflict(alia, found, t_name), @name)
-            end
-            @aliases[alia] = t_name
-          end
+          insert_alia(t_name, aliases)
         end
 
         @unresolved_targets[t_name] = target
@@ -216,6 +212,17 @@ module Bolt
 
       def add_target(target)
         @resolved_targets[target.name] = { 'name' => target.name }
+      end
+
+      def insert_alia(target_name, aliases)
+        aliases.each do |alia|
+          raise ValidationError.new("Invalid alias #{alia}", @name) unless alia =~ NAME_REGEX
+
+          if (found = @aliases[alia])
+            raise ValidationError.new(alias_conflict(alia, found, target_name), @name)
+          end
+          @aliases[alia] = target_name
+        end
       end
 
       def data_merge(data1, data2)
@@ -227,6 +234,7 @@ module Bolt
           'config' => Bolt::Util.deep_merge(data1['config'], data2['config']),
           'name' => data1['name'] || data2['name'],
           'uri' => data1['uri'] || data2['uri'],
+          'alias' => data1['alias'] || data2['alias'],
           # Shallow merge instead of deep merge so that vars with a hash value
           # are assigned a new hash, rather than merging the existing value
           # with the value meant to replace it
@@ -277,7 +285,7 @@ module Bolt
       end
 
       private def alias_target_conflict(name)
-        "Node name #{name} conflicts with alias of the same name"
+        "Target name #{name} conflicts with alias of the same name"
       end
 
       def validate_group_input(input)

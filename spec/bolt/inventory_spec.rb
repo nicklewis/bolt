@@ -158,18 +158,32 @@ describe Bolt::Inventory do
     let(:target) { inventory.get_targets('node1')[0] }
 
     before(:each) do
-      ENV['BOLT_INVENTORY'] = {
-        'nodes' => ['node1'],
-        'config' => {
-          'transport' => 'winrm'
-        }
-      }.to_yaml
+      ENV['BOLT_INVENTORY'] = inventory_env.to_yaml
     end
 
     after(:each) { ENV.delete('BOLT_INVENTORY') }
 
-    it 'should have the default protocol' do
-      expect(target.protocol).to eq('winrm')
+    context 'with valid config' do
+      let(:inventory_env) {
+        {
+          'nodes' => ['node1'],
+          'config' => {
+            'transport' => 'winrm'
+          }
+        }
+      }
+
+      it 'should have the default protocol' do
+        expect(target.protocol).to eq('winrm')
+      end
+    end
+
+    context 'with invalid config' do
+      let(:inventory_env) { 'I thought I could specify a file path here... ' }
+
+      it 'should have the default protocol' do
+        expect { inventory }.to raise_error(Bolt::ParseError, /Could not parse inventory from \$BOLT_INVENTORY/)
+      end
     end
   end
 
@@ -687,7 +701,7 @@ describe Bolt::Inventory do
   end
 
   describe 'add_facts' do
-    context 'whith and without $future flag' do
+    context 'with and without $future flag' do
       let(:inventory) { Bolt::Inventory.new({}) }
       let(:target) { get_target(inventory, 'foo') }
       let(:facts) { { 'foo' => 'bar' } }
@@ -727,6 +741,48 @@ describe Bolt::Inventory do
     it 'creates a version2 inventory when specified' do
       inv = Bolt::Inventory.create_version({ 'version' => 2 }, config, plugins)
       expect(inv.class).to eq(Bolt::Inventory::Inventory2)
+    end
+
+    it 'errors when invalid version number is specified' do
+      expect { Bolt::Inventory.create_version({ 'version' => 666 }, config, plugins) }
+        .to raise_error(Bolt::Inventory::ValidationError, /Unsupported version/)
+    end
+  end
+
+  context 'when using inventory show' do
+    let(:data) {
+      { 'nodes' => [{
+        'name' => 'foo',
+        'alias' => %w[bar baz],
+        'config' => { 'ssh' => { 'disconnect-timeout' => 100 } },
+        'facts' => { 'foo' => 'bar' }
+      }] }
+    }
+
+    let(:inventory) { Bolt::Inventory.new(data) }
+    let(:target) { get_target(inventory, 'foo') }
+    let(:expected_data) {
+      { 'name' => 'foo',
+        'alias' => %w[bar baz],
+        'config' => {
+          'transport' => 'ssh',
+          'ssh' => {
+            'connect-timeout' => 10,
+            'tty' => false,
+            'load-config' => true,
+            'disconnect-timeout' => 100
+          }
+        },
+        'vars' => {},
+        'facts' => { 'foo' => 'bar' },
+        'features' => [],
+        'plugin_hooks' => {
+          'puppet_library' => { 'plugin' => 'puppet_agent', 'stop_service' => true }
+        } }
+    }
+
+    it 'target detail method returns expected munged config from inventory' do
+      expect(target.detail).to eq(expected_data)
     end
   end
 end

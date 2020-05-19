@@ -380,14 +380,6 @@ describe "Bolt::CLI" do
         cli = Bolt::CLI.new(%w[command run uptime --password opensesame --nodes foo])
         expect(cli.parse).to include(password: 'opensesame')
       end
-
-      it "prompts the user for password if not specified" do
-        allow(STDIN).to receive(:noecho).and_return('opensesame')
-        allow(STDOUT).to receive(:print).with('Please enter your password: ')
-        allow(STDOUT).to receive(:puts)
-        cli = Bolt::CLI.new(%w[command run uptime --nodes foo --password])
-        expect(cli.parse).to include(password: 'opensesame')
-      end
     end
 
     describe "key" do
@@ -529,15 +521,6 @@ describe "Bolt::CLI" do
     describe "sudo-password" do
       it "accepts a password" do
         cli = Bolt::CLI.new(%w[command run uptime --sudo-password opensez --run-as alibaba --nodes foo])
-        expect(cli.parse).to include('sudo-password': 'opensez')
-      end
-
-      it "prompts the user for sudo-password if not specified" do
-        allow(STDIN).to receive(:noecho).and_return('opensez')
-        pw_prompt = 'Please enter your privilege escalation password: '
-        allow(STDOUT).to receive(:print).with(pw_prompt)
-        allow(STDOUT).to receive(:puts)
-        cli = Bolt::CLI.new(%w[command run uptime --nodes foo --run-as alibaba --sudo-password])
         expect(cli.parse).to include('sudo-password': 'opensez')
       end
     end
@@ -2100,6 +2083,12 @@ describe "Bolt::CLI" do
       cli.execute(cli.parse)
     end
 
+    it 'lists targets with resolved configuration' do
+      cli = Bolt::CLI.new(%w[inventory show -t localhost --detail])
+      expect_any_instance_of(Bolt::Outputter::Human).to receive(:print_target_info)
+      cli.execute(cli.parse)
+    end
+
     it 'lists groups in the inventory file' do
       cli = Bolt::CLI.new(%w[group show])
       expect_any_instance_of(Bolt::Outputter::Human).to receive(:print_groups)
@@ -2115,6 +2104,57 @@ describe "Bolt::CLI" do
         expect {
           cli.parse
         }.to raise_error(Bolt::Error, /BOLT_INVENTORY is set/)
+      end
+    end
+  end
+
+  describe 'project' do
+    it 'init creates a new project at the specified path' do
+      Dir.mktmpdir do |dir|
+        file = File.join(dir, 'bolt.yaml')
+        cli = Bolt::CLI.new(%W[project init #{dir}])
+        cli.execute(cli.parse)
+        expect(File.file?(file)).to be
+      end
+    end
+
+    it 'init creates a new project in the current working directory' do
+      Dir.mktmpdir do |dir|
+        file = File.join(dir, 'bolt.yaml')
+        cli = Bolt::CLI.new(%w[project init])
+        Dir.chdir(dir) { cli.execute(cli.parse) }
+        expect(File.file?(file)).to be
+      end
+    end
+  end
+
+  context 'when warning about CLI flags being overridden by inventory' do
+    it "does not warn when no inventory is detected" do
+      cli = Bolt::CLI.new(%w[command run whoami -t foo --password bar])
+      cli.parse
+      expect(@log_output.readlines.join)
+        .not_to match(/CLI arguments ["password"] may be overridden by Inventory/)
+    end
+
+    context 'when BOLT_INVENTORY is set' do
+      before(:each) { ENV['BOLT_INVENTORY'] = JSON.dump(version: 2) }
+      after(:each) { ENV.delete('BOLT_INVENTORY') }
+
+      it "warns when BOLT_INVENTORY data is detected and CLI option could be overridden" do
+        cli = Bolt::CLI.new(%w[command run whoami -t foo --password bar])
+        cli.parse
+        expect(@log_output.readlines.join)
+          .to match(/CLI arguments \["password"\] may be overridden by Inventory: BOLT_INVENTORY/)
+      end
+    end
+
+    context 'when inventory file is set' do
+      let(:inventoryfile) { File.join(__dir__, '..', 'fixtures', 'configs', 'empty.yml') }
+      it "warns when BOLT_INVENTORY data is detected and CLI option could be overridden" do
+        cli = Bolt::CLI.new(%W[command run whoami -t foo --password bar --inventoryfile #{inventoryfile}])
+        cli.parse
+        expect(@log_output.readlines.join)
+          .to match(/CLI arguments \["password"\] may be overridden by Inventory:/)
       end
     end
   end

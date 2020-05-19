@@ -13,7 +13,7 @@ format: human
 ssh:
   host-key-check: false
   private-key: ~/.ssh/bolt_id
-  user: foo 
+  user: foo
   interpreters:
     rb: /home/foo/.rbenv/versions/2.5.1/bin/ruby
 ```
@@ -45,7 +45,8 @@ ssh:
 -   `host-key-check`: Whether to perform host key validation when connecting over SSH. Default is `true`.
 -   `password`: Login password.
 -   `port`: Connection port. Default is `22`.
--   `private-key`: The path to the private key file to use for SSH authentication.
+-   `private-key`: Either the path to the private key file to use for SSH authentication, or a hash
+    with key `key-data` and the contents of the private key.
 -   `proxyjump`: A jump host to proxy SSH connections through, and an optional user to connect with, for example: jump.example.com or user1@jump.example.com.
 -   `run-as`: A different user to run commands as after login.
 -   `run-as-command`: The command to elevate permissions. Bolt appends the user and command strings to the configured run as a command before running it on the target. This command must not require an interactive password prompt, and the `sudo-password` option is ignored when `run-as-command` is specified. The run-as command must be specified as an array.
@@ -53,6 +54,22 @@ ssh:
 -   `tmpdir`: The directory to upload and execute temporary files on the target.
 -   `tty`: Request a pseudo tty for the SSH session. This option is generally only used in conjunction with the `run_as` option when the sudoers policy requires a `tty`. Default is `false`.
 -   `user`: Login user. Default is `root`.
+
+For example:
+
+```yaml
+targets:
+  - name: host1.example.net
+    config:
+      transport: ssh
+      ssh:
+        host-key-check: true
+        port: 22
+        run-as-command: ['sudo', '-k', '-n']
+        private-key:
+          key-data: |
+            MY PRIVATE KEY CONTENT
+```
 
 
 ## OpenSSH configuration options
@@ -83,14 +100,14 @@ To illustrate, consider this example:
 `inventory.yaml`
 
 ```yaml
-nodes:
+targets:
   - name: host1.example.net
     config:
       transport: ssh
       ssh:
         host-key-check: true
         port: 22
-        private-key: /.ssh/id_rsa-example
+        private-key: ~/.ssh/id_rsa-example
 ```
 
 `ssh.config`
@@ -196,12 +213,16 @@ The `plugin_hooks` section allows you to configure what plugins a specific hook 
 
 For now, the only configurable plugin hook is `puppet_library`.
 
+The default is to use the puppet_agent plugin with the agent service stopped:
+
 ```yaml
 plugin_hooks:
   puppet_library:
-    plugin: install_agent
+    plugin: puppet_agent
+    stop_service: true
 ```
 
+You can use the bootstrap task to connect all targets to a PE master instead:
 ```yaml
 plugin_hooks:
   puppet_library:

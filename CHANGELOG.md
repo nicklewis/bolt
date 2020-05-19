@@ -1,16 +1,54 @@
 # Changelog
 
-## Bolt Next
+## Bolt 1.36.0
 
-### New Features
+### Deprecation
+
+* **Change arguments for `--password` and `--sudo-password` from optional to required** ([#1269](https://github.com/puppetlabs/bolt/issues/1269))
+
+  The `--password` and `--sudo-password` options now require a password as an argument. Previously, if the password was omitted the user would be prompted to enter one. To continue to be prompted for a password, use the `prompt` plugin.
+
+### New features
+
+* **Add `--detail` option for `inventory show` command** ([#1200](https://github.com/puppetlabs/bolt/issues/1200))
+
+  The `inventory show` command now supports a `--detail` option to show resolved configuration for specified targets.
+
+* **`prompt` messages print to `stderr`** ([#1269](https://github.com/puppetlabs/bolt/issues/1269))
+
+  The `prompt` plugin now prints messages to `stderr` instead of `stdout`.
+
+* **Subcommand `project init` new to the CLI** ([#1285](https://github.com/puppetlabs/bolt/issues/1285))
+
+  The CLI now provides the subcommand `project init` which creates a new file `bolt.yaml` in the current working directory, making the directory a [Bolt project directory](https://puppet.com/docs/bolt/latest/bolt_project_directories.html#local-project-directory).
+
+* **Bolt issues a warning when inventory overrides a CLI option** ([#1341](https://github.com/puppetlabs/bolt/issues/1341))
+
+  Bolt issues a warning when an option is set both on the CLI and in the inventory, whether the inventory loads from a file or from the `bolt_inventory` environment variable.
+  
+### Bug fixes
+
+* **Standardized configured paths to be relative to Boltdir** ([#1162](https://github.com/puppetlabs/bolt/issues/1162))
+
+  This fix standardizes all configured paths, including the modulepath, to be relative to the Boltdir. It only applies to file-based configs, not command line flags which expand relative to CWD. It is gated on the future config option, and will be available by default in Bolt 2.0.
+
+## 1.35.0
+
+### Deprecation
+
+* **Replace `install_agent` plugin with `puppet_agent` module** ([#1294](https://github.com/puppetlabs/bolt/issues/1294))
+
+  The `puppetlabs-puppet_agent` module now provides the same functionality as the `install_agent` plugin did previously. The `install_agent` plugin has been removed and the `puppet_agent` module is now the default plugin for the `puppet_library` hook. If you do not use the bundled `puppet_agent` module you will need to update to version `2.2.1` of the module. If you reference the `install_agent` plugin you will need to now reference `puppet_agent` instead.
+
+### New features
 
 * **Support `limit` option for `do_until` function** ([#1270](https://github.com/puppetlabs/bolt/issues/1270))
 
-  The `do_until` function now supports a limit option that prevents it from iterating infinitely.
+  The `do_until` function now supports a `limit` option that prevents it from iterating infinitely.
 
 * **Improve parameter passing for module plugins** ([#1322](https://github.com/puppetlabs/bolt/issues/1322))
 
-  When there is no `config` section in `bolt_plugin.json` configuration options in `bolt.yaml` are validated against the intersection of the parameters schema specified for each task implementation of the plugin's hooks and the values are passed to the task at run time merged with options set in `inventory.yaml`.
+  In the absence of a `config` section in `bolt_plugin.json`, Bolt will validate any configuration options in `bolt.yaml` against the schema for each task of the plugin’s hook. Bolt passes the values to the task at runtime and merges them with options set in `inventory.yaml`.
 
 ## 1.34.0
 

@@ -64,7 +64,7 @@ plugins:
 
 ## Bundled plugins
 
-Bolt ships with a few plugins out of the box: task, puppetdb, terraform, aws ec2, prompt, pkcs7, and vault.
+Bolt ships with a few plugins out of the box: task, puppetdb, terraform, azure_inventory, aws ec2, prompt, pkcs7, and vault.
 
 ## Task plugin
 
@@ -198,156 +198,14 @@ groups:
 
 ## Terraform
 
-The Terraform plugin supports looking up targets from Terraform state. It accepts several options:
+The `terraform` plugin is a module based plugin. For more information see [https://github.com/puppetlabs/puppetlabs-terraform](https://github.com/puppetlabs/puppetlabs-terraform)
 
-`dir`: The directory from which to load Terraform state `resource_type`: The Terraform resources to match, as a regular expression `uri`: The property of the Terraform resource to use as the target URI (optional) `statefile`: The name of the Terraform state file to load within `dir` (optional, defaults to `terraform.tfstate`) `name`: The property of the Terraform resource to use as the target name (optional) `config`: A Bolt config map where each value is the Terraform property to use for that config setting
+## Azure inventory
 
-One of `uri` or `name` is required. If only `uri` is set, then the value of `uri` will be used as the `name`.
-
-```
-groups:
-  - name: cloud-webs
-    targets:
-      - _plugin: terraform
-        dir: /path/to/terraform/project1
-        resource_type: google_compute_instance.web
-        uri: network_interface.0.access_config.0.nat_ip
-      - _plugin: terraform
-        dir: /path/to/terraform/project2
-        resource_type: aws_instance.web
-        uri: public_ip
-```
-
-Multiple resources with the same name are identified .0, .1, etc.
-
-The path to nested properties must be separated with `.`: for example, `network_interface.0.access_config.0.nat_ip`.
-
-For example, the following truncated output creates two targets, named `34.83.150.52` and `34.83.16.240`. These targets are created by matching the resources `google_compute_instance.web.0` and `google_compute_instance.web.1`. The `uri` for each target is the value of their `network_interface.0.access_config.0.nat_ip` property, which corresponds to the externally routable IP address in Google Cloud.
-
-```
-google_compute_instance.web.0:
-  id = web-0
-  cpu_platform = Intel Broadwell
-  machine_type = f1-micro
-  name = web-0
-  network_interface.# = 1
-  network_interface.0.access_config.# = 1
-  network_interface.0.access_config.0.assigned_nat_ip =
-  network_interface.0.access_config.0.nat_ip = 34.83.150.52
-  network_interface.0.address =
-  network_interface.0.name = nic0
-  network_interface.0.network = https://www.googleapis.com/compute/v1/projects/cloud-app1/global/networks/default
-  network_interface.0.network_ip = 10.138.0.22
-  project = cloud-app1
-  self_link = https://www.googleapis.com/compute/v1/projects/cloud-app1/zones/us-west1-a/instances/web-0
-  zone = us-west1-a
-google_compute_instance.web.1:
-  id = web-1
-  cpu_platform = Intel Broadwell
-  machine_type = f1-micro
-  name = web-1
-  network_interface.# = 1
-  network_interface.0.access_config.# = 1
-  network_interface.0.access_config.0.assigned_nat_ip =
-  network_interface.0.access_config.0.nat_ip = 34.83.16.240
-  network_interface.0.address =
-  network_interface.0.name = nic0
-  network_interface.0.network = https://www.googleapis.com/compute/v1/projects/cloud-app1/global/networks/default
-  network_interface.0.network_ip = 10.138.0.21
-  project = cloud-app1
-  self_link = https://www.googleapis.com/compute/v1/projects/cloud-app1/zones/us-west1-a/instances/web-1
-  zone = us-west1-a
-google_compute_instance.app.1:
-  id = app-1
-  cpu_platform = Intel Broadwell
-  machine_type = f1-micro
-  name = app-1
-  network_interface.# = 1
-  network_interface.0.access_config.# = 1
-  network_interface.0.access_config.0.assigned_nat_ip =
-  network_interface.0.access_config.0.nat_ip = 35.197.93.137
-  network_interface.0.address =
-  network_interface.0.name = nic0
-  network_interface.0.network = https://www.googleapis.com/compute/v1/projects/cloud-app1/global/networks/default
-  network_interface.0.network_ip = 10.138.0.23
-  project = cloud-app1
-  self_link = https://www.googleapis.com/compute/v1/projects/cloud-app1/zones/us-west1-a/instances/app-1
-  zone = us-west1-a
-```
+The `azure_inventory` plugin is a module based plugin. For more information see [https://github.com/puppetlabs/puppetlabs-azure_inventory](https://github.com/puppetlabs/puppetlabs-azure_inventory)
 
 ## AWS Inventory plugin
-
-The AWS Inventory plugin supports looking up running AWS EC2 instances. It supports several fields:
-
--   `profile`: The [named profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html) to use when loading from AWS `config` and `credentials` files. (optional, defaults to `default`)
--   `region`: The region to look up EC2 instances from.
--   `name`: The [EC2 instance attribute](https://docs.aws.amazon.com/sdkforruby/api/Aws/EC2/Instance.html) to use as the target name. (optional)
--   `uri`: The [EC2 instance attribute](https://docs.aws.amazon.com/sdkforruby/api/Aws/EC2/Instance.html) to use as the target URI. (optional)
--   `filters`: The [filter request parameters](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeInstances.html) used to filter the EC2 instances by. Filters are name-values pairs, where the name is a request parameter and the values are an array of values to filter by. (optional)
--   `config`: A Bolt config map where the value for each config setting is an EC2 instance attribute.
-
-One of `uri` or `name` is required. If only `uri` is set, then the value of `uri` will be used as the `name`.
-
-```
-groups:
-  - name: aws
-    targets:
-      - _plugin: aws_inventory
-        profile: user1
-        region: us-west-1
-        name: public_dns_name
-        uri: public_ip_address
-        filters:
-          - name: tag:Owner
-            values: [Devs]
-          - name: instance-type
-            values: [t2.micro, c5.large]
-        config:
-          ssh:
-            host: public_dns_name
-    config:
-      ssh:
-        user: ec2-user
-        private-key: ~/.aws/private-key.pem
-        host-key-check: false
-```
-
-Accessing EC2 instances requires a region and valid credentials to be specified. The following locations are searched in order until a value is found:
-
-**Region**
-
--   `region: <region>` in the inventory file
--   `ENV['AWS_REGION']`
--   `credentials: <filepath>` in the config file
--   `~/.aws/credentials`
-
-**Credentials**
-
--   `ENV['AWS_ACCESS_KEY_ID']` and `ENV['AWS_SECRET_ACCESS_KEY']`
--   `credentials: <filepath>` in the config file
--   `~/.aws/credentials`
-
-If the region or credentials are located in a shared credentials file, a `profile` can be specified in the inventory file to choose which set of credentials to use. For example, if the inventory file were set to `profile: user1`, the second set of credentials would be used:
-
-```
-[default]
-aws_access_key_id=...
-aws_secret_access_key=...
-region=...
-
-[user1]
-aws_access_key_id=...
-aws_secret_access_key=...
-region=...
-```
-
-AWS credential files stored in a non-standard location (`~/.aws/credentials`) can be specified in the Bolt config file:
-
-```
-plugins:
-  aws:
-    credentials: ~/alternate_path/credentials
-```
+The `aws_inventory` plugin is a module based plugin. For more information see [https://github.com/puppetlabs/puppetlabs-aws_inventory](https://github.com/puppetlabs/puppetlabs-aws_inventory)
 
 ## Prompt plugin
 
@@ -413,75 +271,12 @@ plugins:
 ```
 
 -   `keysize`: They size of the key to generate with `bolt secret createkeys`: default: `2048`
--   `private-key`: The path to the private key file. default: `keys/private_key.pkcs7.pem`
--   `public-key`: The path to the public key file. default: `keys/public_key.pkcs7.pem`
+-   `private-key`: The path to the private key file. default: `<boltdir>/keys/private_key.pkcs7.pem`
+-   `public-key`: The path to the public key file. default: `<boltdir>/keys/public_key.pkcs7.pem`
 
 ## Vault plugin
 
-This plugin allows config values to be set by accessing secrets from a Key/Value engine on a Vault server. It supports several fields:
-
--   `_plugin`: The value of `_plugin` must be `vault`
--   `server_url`: The URL of the Vault server (optional, defaults to `ENV['VAULT_ADDR']`)
--   `auth`: The method for authorizing with the Vault server and any necessary parameters (optional, defaults to `ENV['VAULT_TOKEN']`)
--   `path`: The path to the secrets engine (required)
--   `field`: The specific secret being used (optional, defaults to a Ruby hash of all secrets at the `path`)
--   `version`: The version of the K/V engine (optional, defaults to 1)
--   `cacert`: Path to the CA certificate (required when using `https`, defaults to `ENV['VAULT_CACERT']`)
-
-**Authentication Methods**
-
-Vault requires a token to assign an identity and set of policies to a user before accessing secrets. The Vault plugin offers 2 authentication methods:
-
-`token`
-
-Authenticate using a token. This method requires the following fields:
-
--   `method`: The value of `method` must be `token`
--   `token`: The token to authenticate with
-
-`userpass`
-
-Request a token by logging into the Vault server with a username and password. This method requires the following fields:
-
--   `method`: The value of `method` must be `userpass`
--   `user`: The username
--   `pass`: The password
-
-You can add any Vault plugin field to the inventory configuration. The following example shows how you would access the `private-key` secret on a KVv2 engine mounted at `secrets/bolt`:
-
-```
-version: 2
-targets:
-  - ...
-config:
-  ssh:
-    user: root
-    private-key:
-      key-data:
-        _plugin: vault
-        server_url: http://127.0.0.1:8200
-        auth:
-          method: userpass
-          user: bolt
-          pass: bolt
-        path: secrets/bolt
-        field: private-key
-        version: 2
-```
-
-You can also set configuration in the config file (typically `bolt.yaml`) under the `plugins` field. If a field is set in both the inventory file and the config file, Bolt will use the value set in the inventory file. The available fields for the config file are:
-
--   `server_url`
--   `cacert`
--   `auth`
-
-```
-plugins:
-  vault:
-    server_url: https://127.0.0.1:8200
-    cacert: /path/to/cert
-    auth:
-      method: token
-      token: xxxxx-xxxxx
-```
-
+This plugin allows config values to be set by accessing secrets from a Key/Value engine on a Vault
+server. The plugin ships in the [puppetlabs-vault module](https://forge.puppet.com/puppetlabs/vault)
+and is automaticaly installed with the Bolt package. You can see the [git
+repo](https://github.com/puppetlabs/puppetlabs-vault) for more information.

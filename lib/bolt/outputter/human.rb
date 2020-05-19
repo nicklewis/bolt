@@ -135,7 +135,7 @@ module Bolt
         target_str = if targets.length > 5
                        "#{targets.count} targets"
                      else
-                       targets.map(&:uri).join(', ')
+                       targets.map(&:safe_name).join(', ')
                      end
         @stream.puts(colorize(:green, "Starting: #{description} on #{target_str}"))
       end
@@ -311,10 +311,17 @@ module Bolt
         end
       end
 
-      def print_targets(options)
-        targets = options[:targets].map(&:name)
+      def print_targets(targets)
         count = "#{targets.count} target#{'s' unless targets.count == 1}"
-        @stream.puts targets.join("\n")
+        @stream.puts targets.map(&:name).join("\n")
+        @stream.puts colorize(:green, count)
+      end
+
+      def print_target_info(targets)
+        @stream.puts ::JSON.pretty_generate(
+          "targets": targets.map(&:detail)
+        )
+        count = "#{targets.count} target#{'s' unless targets.count == 1}"
         @stream.puts colorize(:green, count)
       end
 

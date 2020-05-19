@@ -29,7 +29,7 @@ module Bolt
         { flags: ACTION_OPTS + %w[tmpdir],
           banner: FILE_HELP }
       when 'inventory'
-        { flags: OPTIONS[:inventory] + OPTIONS[:global] + %w[format inventoryfile boltdir configfile],
+        { flags: OPTIONS[:inventory] + OPTIONS[:global] + %w[format inventoryfile boltdir configfile detail],
           banner: INVENTORY_HELP }
       when 'group'
         { flags: OPTIONS[:global] + %w[format inventoryfile boltdir configfile],
@@ -48,6 +48,15 @@ module Bolt
         else
           { flags: ACTION_OPTS + %w[params compile-concurrency tmpdir],
             banner: PLAN_HELP }
+        end
+      when 'project'
+        case action
+        when 'init'
+          { flags: OPTIONS[:global],
+            banner: PROJECT_INIT_HELP }
+        else
+          { flags: OPTIONS[:global],
+            banner: PROJECT_HELP }
         end
       when 'puppetfile'
         case action
@@ -121,6 +130,7 @@ module Bolt
         bolt secret decrypt <encrypted>  Decrypt a value
         bolt inventory show              Show the list of targets an action would run on
         bolt group show                  Show the list of groups in the inventory
+        bolt project init                Create a new Bolt project
 
       Run `bolt <subcommand> --help` to view specific examples.
 
@@ -310,6 +320,24 @@ module Bolt
       Available options are:
     GROUP_HELP
 
+    PROJECT_HELP = <<~PROJECT_HELP
+      Usage: bolt project <action>
+
+      Available actions are:
+        init                     Create a new Bolt project
+
+      Available options are:
+    PROJECT_HELP
+
+    PROJECT_INIT_HELP = <<~PROJECT_INIT_HELP
+      Usage: bolt project init [directory]
+
+      Create a new Bolt project.
+      Specify a directory to create the Bolt project in. Defaults to the current working directory.
+
+      Available options are:
+    PROJECT_INIT_HELP
+
     def initialize(options)
       super()
 
@@ -357,20 +385,23 @@ module Bolt
              "Puppet manifest code to apply to the targets") do |code|
         @options[:code] = code
       end
+      define('--detail', 'Show resolved configuration for the targets') do |detail|
+        @options[:detail] = detail
+      end
 
       separator "\nAuthentication:"
       define('-u', '--user USER', 'User to authenticate as') do |user|
         @options[:user] = user
       end
       define('-p', '--password [PASSWORD]',
-             'Password to authenticate with. Omit the value to prompt for the password.') do |password|
-        if password.nil?
-          STDOUT.print "Please enter your password: "
-          @options[:password] = STDIN.noecho(&:gets).chomp
-          STDOUT.puts
-        else
-          @options[:password] = password
+             'Password to authenticate with') do |password|
+        # TODO: Remove deprecation message
+        unless password
+          msg = "Optional parameter for --password is deprecated and no longer prompts for password. " \
+                "Use the prompt plugin instead to prompt for passwords."
+          raise Bolt::CLIError, msg
         end
+        @options[:password] = password
       end
       define('--private-key KEY', 'Private ssh key to authenticate with') do |key|
         @options[:'private-key'] = key
@@ -390,14 +421,14 @@ module Bolt
         @options[:'run-as'] = user
       end
       define('--sudo-password [PASSWORD]',
-             'Password for privilege escalation. Omit the value to prompt for the password.') do |password|
-        if password.nil?
-          STDOUT.print "Please enter your privilege escalation password: "
-          @options[:'sudo-password'] = STDIN.noecho(&:gets).chomp
-          STDOUT.puts
-        else
-          @options[:'sudo-password'] = password
+             'Password for privilege escalation') do |password|
+        # TODO: Remove deprecation message
+        unless password
+          msg = "Optional parameter for --sudo-password is deprecated and no longer prompts for password. " \
+                "Use the prompt plugin instead to prompt for passwords."
+          raise Bolt::CLIError, msg
         end
+        @options[:'sudo-password'] = password
       end
 
       separator "\nRun context:"
@@ -422,7 +453,8 @@ module Bolt
         @options[:boltdir] = path
       end
       define('--configfile FILEPATH',
-             'Specify where to load config from (default: ~/.puppetlabs/bolt/bolt.yaml)') do |path|
+             'Specify where to load config from (default: ~/.puppetlabs/bolt/bolt.yaml). ' \
+             'Directory containing bolt.yaml will be used as the Boltdir.') do |path|
         @options[:configfile] = path
       end
       define('-i', '--inventoryfile FILEPATH',

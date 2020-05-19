@@ -123,13 +123,10 @@ module Bolt
       # PDB is special do we want to expose the default client to the context?
       plugins.add_plugin(Bolt::Plugin::Puppetdb.new(pdb_client))
 
-      plugins.add_ruby_plugin('Bolt::Plugin::AwsInventory')
       plugins.add_ruby_plugin('Bolt::Plugin::InstallAgent')
       plugins.add_ruby_plugin('Bolt::Plugin::Task')
-      plugins.add_ruby_plugin('Bolt::Plugin::Terraform')
       plugins.add_ruby_plugin('Bolt::Plugin::Pkcs7')
       plugins.add_ruby_plugin('Bolt::Plugin::Prompt')
-      plugins.add_ruby_plugin('Bolt::Plugin::Vault')
 
       plugins
     end

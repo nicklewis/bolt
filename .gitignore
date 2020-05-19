@@ -58,10 +58,16 @@ modules/mount_core/
 modules/scheduled_task/
 modules/selinux_core/
 modules/sshkeys_core/
+modules/vault/
 modules/yumrepo_core/
 modules/zfs_core/
 modules/zone_core/
 
+modules/terraform
+modules/azure_inventory
+modules/aws_inventory
+
 .sass-cache/
 locales/
 documentation/plan_functions.md
+documentation/bolt_command_reference.md

@@ -15,6 +15,7 @@ describe "apply" do
   include BoltSpec::Run
 
   let(:modulepath) { File.join(__dir__, '../fixtures/apply') }
+  let(:hiera_config) { File.join(__dir__, '../fixtures/configs/empty.yml') }
   let(:config_flags) { %W[--format json --nodes #{uri} --password #{password} --modulepath #{modulepath}] + tflags }
 
   describe 'over ssh', ssh: true do
@@ -24,33 +25,21 @@ describe "apply" do
     let(:tflags) { %W[--no-host-key-check --run-as root --sudo-password #{password}] }
 
     def root_config
-      { 'modulepath' => File.join(__dir__, '../fixtures/apply'),
-        'ssh' => {
-          'run-as' => 'root',
-          'sudo-password' => conn_info('ssh')[:password],
-          'host-key-check' => false
-        } }
+      { 'modulepath' => File.join(__dir__, '../fixtures/apply') }
     end
 
     def agent_version_inventory
-      { 'groups' => [
-        { 'name' => 'agent_targets',
-          'groups' => [
-            { 'name' => 'puppet_5',
-              'nodes' => [conn_uri('ssh', override_port: 20023)],
-              'config' => { 'ssh' => { 'port' => 20023 } } },
-            { 'name' => 'puppet_6',
-              'nodes' => [conn_uri('ssh', override_port: 20024)],
-              'config' => { 'ssh' => { 'port' => 20024 } } }
-          ],
-          'config' => {
-            'ssh' => { 'host' => conn_info('ssh')[:host],
-                       'host-key-check' => false,
-                       'user' => conn_info('ssh')[:user],
-                       'password' => conn_info('ssh')[:password],
-                       'key' => conn_info('ssh')[:key] }
-          } }
-      ] }
+      inventory = docker_inventory(root: true)
+      inventory['groups'] << {
+        'name' => 'agent_targets',
+        'groups' => [
+          { 'name' => 'puppet_5',
+            'targets' => ['puppet_5_node'] },
+          { 'name' => 'puppet_6',
+            'targets' => ['puppet_6_node'] }
+        ]
+      }
+      inventory
     end
 
     def lib_plugin_inventory
@@ -59,7 +48,7 @@ describe "apply" do
           'uri' => conn_uri('ssh'),
           'plugin_hooks' => {
             'puppet_library' => {
-              'plugin' => 'install_agent'
+              'plugin' => 'puppet_agent'
             }
           }
         }] }
@@ -174,6 +163,17 @@ describe "apply" do
         end
       end
 
+      it 'succeeds with an empty hiera config' do
+        with_tempfile_containing('bolt', YAML.dump("hiera-config" => hiera_config), '.yaml') do |conf|
+          results = run_cli_json(%W[plan run prep --configfile #{conf.path}] + config_flags)
+          results.each do |result|
+            expect(result['status']).to eq('success')
+            report = result['result']['report']
+            expect(report['resource_statuses']).to include("Notify[Hello #{uri}]")
+          end
+        end
+      end
+
       it 'gets resources' do
         with_tempfile_containing('inventory', YAML.dump(agent_version_inventory), '.yaml') do |inv|
           results = run_cli_json(%W[plan run basic::resources --nodes agent_targets
@@ -236,7 +236,7 @@ describe "apply" do
             expect(task_error['msg']).to include("The task failed with exit code 1")
 
             param_error = result_set.select { |h| h['node'] == 'badparams' }[0]['result']['_error']
-            expect(param_error['kind']).to eq('bolt/validation-error')
+            expect(param_error['kind']).to eq('bolt/plugin-error')
             expect(param_error['msg']).to include("Invalid parameters for Task puppet_agent::install")
 
             plugin_error = result_set.select { |h| h['node'] == 'badplugin' }[0]['result']['_error']
@@ -288,9 +288,9 @@ describe "apply" do
     context "with a puppet_agent installed" do
       before(:all) do
         # Deferred must use puppet >= 6
-        target = conn_uri('ssh')
-        install(target, inventory: conn_inventory)
-        result = run_task('puppet_agent::version', target, {}, config: root_config, inventory: conn_inventory)
+        target = 'puppet_6'
+        install(target, inventory: agent_version_inventory)
+        result = run_task('puppet_agent::version', target, {}, config: root_config, inventory: agent_version_inventory)
         major_version = result.first['result']['version'].split('.').first.to_i
         expect(major_version).to be >= 6
       end

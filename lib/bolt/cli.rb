@@ -37,6 +37,7 @@ module Bolt
                  'secret' => %w[encrypt decrypt createkeys],
                  'inventory' => %w[show],
                  'group' => %w[show],
+                 'project' => %w[init],
                  'apply' => %w[] }.freeze
 
     attr_reader :config, :options
@@ -134,6 +135,7 @@ module Bolt
       # options[:targets] will contain a resolved set of Target objects
       unless options[:subcommand] == 'puppetfile' ||
              options[:subcommand] == 'secret' ||
+             options[:subcommand] == 'project' ||
              options[:action] == 'show' ||
              options[:action] == 'convert'
 
@@ -145,6 +147,7 @@ module Bolt
         options[:verbose] = options[:subcommand] != 'plan'
       end
 
+      warn_inventory_overrides_cli(options)
       options
     rescue Bolt::Error => e
       outputter.fatal_error(e)
@@ -244,7 +247,7 @@ module Bolt
 
     def puppetdb_client
       return @puppetdb_client if @puppetdb_client
-      puppetdb_config = Bolt::PuppetDB::Config.load_config(nil, config.puppetdb)
+      puppetdb_config = Bolt::PuppetDB::Config.load_config(nil, config.puppetdb, config.boltdir.path)
       @puppetdb_client = Bolt::PuppetDB::Client.new(puppetdb_config)
     end
 
@@ -254,6 +257,35 @@ module Bolt
 
     def query_puppetdb_nodes(query)
       puppetdb_client.query_certnames(query)
+    end
+
+    def warn_inventory_overrides_cli(opts)
+      inventory_source = if ENV[Bolt::Inventory::ENVIRONMENT_VAR]
+                           Bolt::Inventory::ENVIRONMENT_VAR
+                         elsif @config.inventoryfile && Bolt::Util.file_stat(@config.inventoryfile)
+                           @config.inventoryfile
+                         elsif (inventory_file = @config.default_inventoryfile.find do |file|
+                                  begin
+                                    Bolt::Util.file_stat(file)
+                                  rescue Errno::ENOENT
+                                    false
+                                  end
+                                end
+                               )
+                           inventory_file
+                         end
+
+      inventory_cli_opts = %i[authentication escalation transports].each_with_object([]) do |key, acc|
+        acc.concat(Bolt::BoltOptionParser::OPTIONS[key])
+      end
+
+      inventory_cli_opts.concat(%w[no-host-key-check no-ssl no-ssl-verify no-tty])
+
+      conflicting_options = Set.new(opts.keys.map(&:to_s)).intersection(inventory_cli_opts)
+
+      if inventory_source && conflicting_options.any?
+        @logger.warn("CLI arguments #{conflicting_options.to_a} may be overridden by Inventory: #{inventory_source}")
+      end
     end
 
     def execute(options)
@@ -307,7 +339,11 @@ module Bolt
             list_plans
           end
         elsif options[:subcommand] == 'inventory'
-          list_targets
+          if options[:detail]
+            show_targets
+          else
+            list_targets
+          end
         elsif options[:subcommand] == 'group'
           list_groups
         end
@@ -324,6 +360,8 @@ module Bolt
       end
 
       case options[:subcommand]
+      when 'project'
+        code = initialize_project
       when 'plan'
         code = run_plan(options[:object], options[:task_options], options[:target_args], options)
       when 'puppetfile'
@@ -413,7 +451,12 @@ module Bolt
 
     def list_targets
       update_targets(options)
-      outputter.print_targets(options)
+      outputter.print_targets(options[:targets])
+    end
+
+    def show_targets
+      update_targets(options)
+      outputter.print_target_info(options[:targets])
     end
 
     def list_groups
@@ -493,6 +536,21 @@ module Bolt
       # generate_types will surface a nice error with helpful message if it fails
       pal.generate_types
       0
+    end
+
+    def initialize_project
+      path = File.expand_path(options[:object] || Dir.pwd)
+      FileUtils.mkdir_p(path)
+      ok = FileUtils.touch(File.join(path, 'bolt.yaml'))
+
+      result = if ok
+                 "Successfully created Bolt project directory at #{path}"
+               else
+                 "Could not create Bolt project directory at #{path}"
+               end
+      outputter.print_message result
+
+      ok ? 0 : 1
     end
 
     def install_puppetfile(config, puppetfile, modulepath)

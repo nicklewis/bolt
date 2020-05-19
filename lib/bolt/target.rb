@@ -14,6 +14,7 @@ module Bolt
       new(target.name, inventory)
     end
 
+    # TODO: Disallow any positional argument other than URI.
     # Target.new from a plan with just a uri. Puppet requires the arguments to
     # this method to match (by name) the attributes defined on the datatype.
     # rubocop:disable Lint/UnusedMethodArgument
@@ -27,12 +28,12 @@ module Bolt
                                 plugin_hooks = nil)
       from_asserted_hash('uri' => uri)
     end
+    # rubocop:enable Lint/UnusedMethodArgument
 
     def initialize(name, inventory = nil)
       @name = name
       @inventory = inventory
     end
-    # rubocop:enable Lint/UnusedMethodArgument
 
     # features returns an array to be compatible with plans
     def features
@@ -78,6 +79,19 @@ module Bolt
         'host' => host,
         'port' => port
       )
+    end
+
+    def detail
+      {
+        'name' => name,
+        'uri' => uri,
+        'alias' => target_alias,
+        'config' => Bolt::Util.deep_merge(config, 'transport' => transport, transport => options),
+        'vars' => vars,
+        'features' => features,
+        'facts' => facts,
+        'plugin_hooks' => plugin_hooks
+      }
     end
 
     def inventory_target
@@ -226,6 +240,18 @@ module Bolt
       end
     end
 
+    def vars
+      @inventory.vars(self)
+    end
+
+    def facts
+      @inventory.facts(self)
+    end
+
+    def target_alias
+      @inventory.target_alias(self)
+    end
+
     # TODO: WHAT does equality mean here?
     # should we just compare names? is there something else that is meaninful?
     def eql?(other)
@@ -256,6 +282,21 @@ module Bolt
         'host' => host,
         'port' => port
       )
+    end
+
+    def detail
+      {
+        'name' => name,
+        'alias' => target_alias,
+        'config' => {
+          'transport' => transport,
+          transport => options
+        },
+        'vars' => vars,
+        'facts' => facts,
+        'features' => features.to_a,
+        'plugin_hooks' => plugin_hooks
+      }
     end
 
     def host
